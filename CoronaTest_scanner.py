@@ -4,6 +4,8 @@ from matplotlib import pyplot as plt
 from tkinter import * 
 import tkinter
 import mysql.connector
+from datetime import date
+import time
 
 
 
@@ -19,56 +21,28 @@ my_cursor = my_db.cursor()
 
 Fenster = Tk()
 Fenster.title ("Corona Test Scanner")
-Fenster.geometry("900x300")
+Fenster.geometry("300x300")
 
+myvar = StringVar()
 
+def mywarWritten(*args):
+    print (myvar.get())
 
-def executeDBcreate():
-    my_cursor.execute("""DROP DATABASE IF EXISTS CoronaTestDB;
-CREATE DATABASE IF NOT EXISTS CoronaTestDB;""")
-    result = my_cursor.fetchall()  
+myvar.trace("w", mywarWritten)
+
+text_entry = Entry(Fenster, textvariable=myvar)
+text_entry.pack()
+
+#def Eingabe():
+#    print("Eingabe: %s" % (eingabeFeld.get()))
+#    eingabeFeld.delete(0,END)
+#    OpenCam()
+
+def InDBSchreiben():
+    my_cursor.execute("""INSERT INTO TESTS (USERID, DATUM, RESULTID) VALUES ('""" + StringVar(myvar) + """', '2021-11-22', '2');""")
+    result = my_cursor.fetchall()
     for _ in result:
         print(_)
-
-def executeDBcreateTable():
-    my_cursor.execute("""USE CoronaTestDB;
-
-CREATE TABLE IF NOT EXISTS USER (
-    USERID         INTEGER NOT NULL,
-    VORNAME        VARCHAR(50),
-    NACHNAME       VARCHAR(50),
-PRIMARY KEY (USERID)
-);
-
-CREATE TABLE IF NOT EXISTS RESULTS (
-    RESULTID       INTEGER NOT NULL,
-    RESULTNAME     VARCHAR(50),
-PRIMARY KEY (RESULTID)
-);
-
-CREATE TABLE IF NOT EXISTS TESTS (
-    USERID         INTEGER NOT NULL,
-    DATUM          DATE,
-    RESULTID         INTEGER NOT NULL,
-FOREIGN KEY (USERID)  REFERENCES USER (USERID),
-FOREIGN KEY (RESULTID)  REFERENCES RESULTS (RESULTID)
-);""")
-    result = my_cursor.fetchall()  
-    for _ in result:
-        print(_)
-
-def executeDBinsertData():
-    my_cursor.execute("""USE CoronaTestDB;
-INSERT INTO RESULTS (RESULTID, RESULTNAME) VALUES ('1', 'Negaiv');
-INSERT INTO RESULTS (RESULTID, RESULTNAME) VALUES ('2', 'Positiv');
-COMMIT WORK;""")
-    result = my_cursor.fetchall()  
-    for _ in result:
-        print(_)
-
-def InsertDatabse():
-    if (ButtonInsertDatabase['state'] == tkinter.NORMAL):
-        executeDBcreate(), executeDBcreateTable(), executeDBinsertData() 
 
 def OpenCam():
     if (ButtonOpenCam['state'] == tkinter.NORMAL):
@@ -121,17 +95,34 @@ def OpenCam():
         # Get numberof drops and cover precntage
         connectedComponentPropsFinal = cv2.connectedComponentsWithStats(IThreshFill, 8, cv2.CV_32S)
         NumberOfDrops = connectedComponentPropsFinal[0]
-        # Print
+
         print ("Number of drops = " + str(NumberOfDrops))
 
+        time.sleep(6)
+        
+        cv2.destroyAllWindows()
 
+        InDBSchreiben()
+
+
+def Bestätigung():
+    if (Button['state'] == tkinter.NORMAL):
+        print ("Eingabe:"&myvar)
+
+
+
+
+#eingabeFeld = Entry(Fenster)
+#eingabeFeld.grid(row=5, column=1)
+#Button(Fenster, text='Bestätigung', command=Bestätigung).grid(row=10, column=1, sticky=W, pady=5)
 
 ButtonOpenCam = Button(master=Fenster, bg='white', text='Open Cam', command=OpenCam)
-ButtonOpenCam.place(x=10, y=10, width=100, height=22)
-ButtonInsertDatabase = Button(master=Fenster, bg='white', text='Insert DB', command=InsertDatabse)
-ButtonInsertDatabase.place(x=120, y=10, width=100, height=22)
+ButtonOpenCam.place(x=10, y=100, width=100, height=22)
+
 exitButton = Button(master=Fenster, text='Schließen', command=Fenster.quit)
 exitButton.place(x=5, y=275, width=80, height=22)
+
+
 
 
 
